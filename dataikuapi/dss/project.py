@@ -1,5 +1,8 @@
 import warnings, os.path as osp
 
+
+
+
 from ..dss_plugin_mlflow import MLflowHandle
 
 from .dataset import DSSDataset, DSSDatasetListItem, DSSManagedDatasetCreationHelper
@@ -25,6 +28,7 @@ from .ml import DSSMLTask, DSSMLTaskQueues
 from .analysis import DSSAnalysis
 from .flow import DSSProjectFlow
 from .app import DSSAppManifest
+from dataikuapi.dss.webapp import DSSWebApp, DSSWebAppListItem
 from .codestudio import DSSCodeStudioObject, DSSCodeStudioObjectListItem
 
 class DSSProject(object):
@@ -1629,7 +1633,33 @@ class DSSProject(object):
         """
         return DSSMLflowExtension(client=self.client, project_key=self.project_key)
 
+    ########################################################
+    # Webapps
+    ########################################################
+    def list_webapps(self, as_objects=False):
+        """
+        List the webapps in the project
 
+        :returns: list of webapps, each one as a JSON object
+        """
+        webapps=self.client._perform_json(
+            "GET","/projects/%s/webapps/" % self.project_key)
+            
+        if not as_objects:
+            return [DSSWebAppListItem(self.client, self.project_key, item) for item in webapps]
+        elif as_objects:
+            return [DSSWebApp(self.client, self.project_key, item["id"]) for item in webapps]
+        else:
+            raise ValueError("Unknown as_objects, its supposed to be a boolean") 
+        
+    def get_webapp(self,webapp_id):
+        """
+        Get a handle for the webapp 
+        :param str webapp_id: the identified for the desired code studio object 
+
+        :returns: A: class: dataikuapi.dss.webapp.DSSWebAppObject handle
+        """
+        return DSSWebApp(self.client,self.project_key,webapp_id)
 
     ########################################################
     # Code studios
